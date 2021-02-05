@@ -12,16 +12,21 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from HeaderLayout import HeaderLayoutForm
+from TerrainLayout import Ui_Terreno
+
 import traceback
 
 
 project = ""
 lastseenproject = ""
+gridlayout = QGridLayout()
+
 class Ui_ProjectMainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(Ui_ProjectMainWindow, self).__init__(parent)
         self.setObjectName("ProjectMainWindow")
         self.resize(800, 600)
+        global gridlayout
         self.setupUi()
 
     def setupUi(self):
@@ -36,8 +41,8 @@ class Ui_ProjectMainWindow(QMainWindow):
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
         self.centralwidget.setSizePolicy(sizePolicy)
         self.centralwidget.setObjectName("centralwidget")
-        self.gridlayout = QGridLayout(self.centralwidget)
-        self.gridlayout.setObjectName("gridlayout")
+        gridlayout = QGridLayout(self.centralwidget)
+        gridlayout.setObjectName("gridlayout")
         self.gridLayoutTelaInicial = QGridLayout()
         self.gridLayoutTelaInicial.setObjectName("gridLayoutTelaInicial")
         self.introWidget = QWidget(self.centralwidget)
@@ -91,7 +96,7 @@ class Ui_ProjectMainWindow(QMainWindow):
         spacerItem5 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem5)
         self.gridLayoutTelaInicial.addWidget(self.introWidget, 0, 0, 1, 1)
-        self.gridlayout.addLayout(self.gridLayoutTelaInicial, 0, 0, 1, 1)
+        gridlayout.addLayout(self.gridLayoutTelaInicial, 0, 0, 1, 1)
         self.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar()
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
@@ -328,21 +333,23 @@ class Ui_ProjectMainWindow(QMainWindow):
     def showHeaderLayout(self):
         global project
         global lastseenproject
+        global gridlayout
         if project:
-            self.clearLayout(self.gridlayout)
+            self.clearLayout(gridlayout)
             lastseenproject = project
             self.HeaderLayout = HeaderLayoutForm(self)
             #self.setStyleSheet("background-color:Lightgrey")
             self.label_4.hide()
             self.label_3.hide()
+            self.label_2.hide()
             self.label.hide()
             self.introWidget.hide()
-            self.gridlayout.addWidget(self.HeaderLayout)
+            self.gridLayoutTelaInicial.addWidget(self.HeaderLayout)
             self.projectDockWidget.setWidget(ETree(self))
             self.projectDockWidget.show()
 
 
-    def clearLayout(self, layout):
+    def clearLayout(cls, layout):
         while layout.count():
             child = layout.takeAt(0)
             if child.widget():
@@ -356,12 +363,14 @@ class Ui_ProjectMainWindow(QMainWindow):
             self.showHeaderLayout()
 
 class ETree(QTreeWidget):
+    global project
+    global lastseenproject
+    global gridlayout
+
     def __init__(self, parent=None):
         super(ETree, self).__init__(parent)
         self.treeUI()
         self.itemClicked.connect(self.Eclicked)
-
-
 
     def treeUI(self):
         #http://3plus.hatenablog.com/entry/2014/09/12/222738
@@ -411,9 +420,15 @@ background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1
     def Eclicked(self, it, col):
         #print(it, col, it.text(col))
         if it.text(col) == "Project Header":
-            print("0")
+            self.parent().parent().clearLayout(self.parent().parent().gridLayoutTelaInicial)
+            self.HeaderLayout = HeaderLayoutForm(self)
+            self.parent().parent().gridLayoutTelaInicial.addWidget(self.HeaderLayout)
         elif it.text(col) == "Terrain":
-            print("1")
+            if project:
+                self.parent().parent().clearLayout(self.parent().parent().gridLayoutTelaInicial)
+                self.HeaderLayout = Ui_Terreno(self)
+                self.parent().parent().gridLayoutTelaInicial.addWidget(self.HeaderLayout)
+
         elif it.text(col) == "Sensor":
             print("2")
         elif it.text(col) == "Flight":
